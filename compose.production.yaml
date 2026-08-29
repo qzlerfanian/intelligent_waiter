@@ -1,0 +1,23 @@
+services:
+  api:
+    build: {context: ./backend, dockerfile: Dockerfile.prod}
+    command: gunicorn config.wsgi:application -c gunicorn.conf.py
+    volumes: []
+    ports: []
+    restart: unless-stopped
+  worker:
+    build: {context: ./backend, dockerfile: Dockerfile.prod}
+    volumes: []
+    restart: unless-stopped
+  beat:
+    build: {context: ./backend, dockerfile: Dockerfile.prod}
+    volumes: []
+    restart: unless-stopped
+  web:
+    build: {context: ./frontend, dockerfile: Dockerfile.prod}
+    command: []
+    volumes: []
+    ports: ["8080:8080"]
+    restart: unless-stopped
+  db: {restart: unless-stopped}
+  redis: {restart: unless-stopped}

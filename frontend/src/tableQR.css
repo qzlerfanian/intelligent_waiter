@@ -1,0 +1,5 @@
+.manage { font-family: Vazirmatn, Tahoma, Arial, sans-serif; }
+.manage h1 { letter-spacing: normal; }
+.manage-qr-image { display: grid; justify-items: center; gap: 12px; padding: 20px 0; }
+.manage-qr-image img { max-width: 100%; height: auto; border: 1px solid #e0e7e1; border-radius: 14px; }
+.manage-qr-image a { background: #eef3ee; padding: 8px 18px; border-radius: 10px; }
