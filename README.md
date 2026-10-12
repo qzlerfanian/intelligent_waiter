@@ -14,6 +14,8 @@ Baran is an API-first, multi-tenant restaurant management and conversational ord
 
 The responsive restaurant management console is available at `/manage`: owner registration, organization setup, branches, employees and branch assignments, menus, products, tables and downloadable QR codes, campaigns, schedules, stock, recipes, and reservations. See [the management setup guide](docs/operations/management-panel.md) for the complete first-restaurant workflow and dependency update commands.
 
+For a complete Persian acceptance test covering the full management, customer, staff, AI, voice, RAG, payment, loyalty, inventory, reservation, security, and failure flows, use [the end-to-end test scenarios](docs/operations/e2e-test-scenarios-fa.md).
+
 1. Copy `.env.example` to `.env`.
 2. Run `docker compose up --build`.
 3. Open the UI at http://localhost:5173 and the API health endpoint at http://localhost:8000/api/v1/health/.
@@ -82,6 +84,28 @@ The assistant can read, add, update, and remove cart lines through server-side t
 - Confirmation verifies the session, expiry, active cart, and a SHA-256 cart fingerprint before atomically creating the order.
 - The chat UI renders the authoritative cart total and a separate **تأیید و ثبت سفارش** button.
 - OpenAI requests disable response storage and attach a stable pseudonymous `safety_identifier` derived from the table/customer session.
+
+### Voice chat
+
+The customer chat supports Persian voice input and AI-generated spoken replies. Configure `OPENAI_API_KEY`; speech-to-text defaults to `gpt-4o-mini-transcribe`, text-to-speech defaults to `gpt-4o-mini-tts`, and the voice defaults to `coral` (all are configurable in `.env`).
+
+- `POST /api/v1/customer/chat/voice/messages/` accepts multipart `audio` plus `duration_ms`, transcribes it, and processes the transcript through the same session-scoped assistant and trusted tools.
+- `GET /api/v1/customer/chat/messages/{message-id}/speech/` returns an MP3 only for an assistant message belonging to the current table session.
+- Recordings are limited to 60 seconds and 8 MB. The browser microphone works on `localhost` or HTTPS and requires customer permission.
+- Audio is sent directly for transcription and is not persisted by Baran. Generated MP3 responses are cached for one hour.
+- To prevent a recognition mistake from placing an order, voice cannot perform final checkout confirmation; the customer must use the confirmation button or type an exact affirmative response.
+- The UI visibly discloses that spoken replies are AI-generated.
+
+### RAG and restaurant knowledge base
+
+The management console includes **پایگاه دانش هوش مصنوعی** for organization-wide or branch-specific policies, opening hours, services, brand facts, and FAQs. Saving a document chunks and indexes it with `text-embedding-3-small`; if OpenAI is not configured, lexical retrieval remains available and editing the document later reindexes it.
+
+- `GET|POST /api/v1/knowledge/documents/` lists or creates tenant-scoped knowledge documents.
+- `GET|PATCH|DELETE /api/v1/knowledge/documents/{id}/` manages a document and automatically rebuilds its chunks after relevant edits.
+- `POST /api/v1/knowledge/documents/{id}/reindex/` explicitly retries indexing.
+- Retrieval always filters by the table session's organization and includes only shared documents or documents belonging to that session's branch.
+- The assistant receives only the top relevant chunks, treats document text as untrusted reference material, and records the selected source titles in assistant-message metadata.
+- Menu prices, availability, allergens, cart changes, and order submission continue to use deterministic database tools—not RAG text.
 
 ## Guardrails
 
